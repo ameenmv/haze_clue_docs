@@ -74,24 +74,39 @@ export default withMermaid(
           ]
         },
         {
-          text: '📱 Mobile Backend — .NET',
-          collapsed: true,
+          text: '🔷 Mobile Backend — .NET',
+          collapsed: false,
           items: [
             { text: 'Introduction & Stack', link: '/docs/backend-mobile/' },
+            { text: 'Authentication & Security', link: '/docs/backend-mobile/authentication' },
+            { text: 'Sessions API', link: '/docs/backend-mobile/sessions' },
+            { text: 'Devices & Smartwatch', link: '/docs/backend-mobile/devices' },
+            { text: 'Insights & Notifications', link: '/docs/backend-mobile/insights' },
+            { text: 'Deployment & Env', link: '/docs/backend-mobile/deployment' },
           ]
         },
         {
           text: '📲 Flutter Mobile App',
-          collapsed: true,
+          collapsed: false,
           items: [
             { text: 'App Overview', link: '/docs/mobile/' },
+            { text: 'API Service Layer', link: '/docs/mobile/api-service' },
+            { text: 'Auth & Onboarding', link: '/docs/mobile/auth' },
+            { text: 'Training & tDCS', link: '/docs/mobile/training' },
+            { text: 'Insights & Analytics', link: '/docs/mobile/insights' },
+            { text: 'Devices & BLE', link: '/docs/mobile/devices' },
           ]
         },
         {
           text: '🌐 Instructor Web Platform',
-          collapsed: true,
+          collapsed: false,
           items: [
-            { text: 'Nuxt 4 Frontend', link: '/docs/website/' },
+            { text: 'Introduction & Stack', link: '/docs/website/' },
+            { text: 'Auth & Store', link: '/docs/website/auth' },
+            { text: '$customFetch Plugin', link: '/docs/website/custom-fetch' },
+            { text: 'Live Session Dashboard', link: '/docs/website/live-session' },
+            { text: 'Pages & Routing', link: '/docs/website/pages' },
+            { text: 'Build & Deployment', link: '/docs/website/deployment' },
           ]
         },
         {
