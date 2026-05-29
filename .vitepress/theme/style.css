@@ -1,0 +1,33 @@
+:root {
+  --vp-c-brand-1: #8B5CF6;
+  --vp-c-brand-2: #7C3AED;
+  --vp-c-brand-3: #6D28D9;
+  
+  --vp-c-bg: #13131A;
+  --vp-c-bg-alt: #1E1E2A;
+  
+  --vp-c-text-1: #F8FAFC;
+  --vp-c-text-2: #CBD5E1;
+}
+
+html {
+  background-color: var(--vp-c-bg);
+}
+
+.VPSidebar {
+  background-color: rgba(30, 30, 42, 0.7) !important;
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.VPNav {
+  background-color: rgba(19, 19, 26, 0.7) !important;
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.VPHero .name {
+  background: -webkit-linear-gradient(120deg, #8B5CF6 30%, #C4B5FD);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

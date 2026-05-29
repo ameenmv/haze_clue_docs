@@ -1,0 +1,16 @@
+{
+  "name": "hazeclue_docs",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "mermaid": "^11.15.0",
+    "vitepress": "^1.6.4",
+    "vitepress-plugin-mermaid": "^2.0.17",
+    "vue": "^3.5.35"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
