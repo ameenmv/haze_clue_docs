@@ -1,58 +1,210 @@
-# Artificial Intelligence Models
+# AI Engine — RARD–MVES v2.2
 
-The `hazeclue-ai` repository contains the sophisticated machine learning pipelines that power the core "Brain-Computer Interface" (BCI) capabilities of HazeClue. 
+> **Repository:** [`ameenmv/HazeClue_AI`](https://github.com/ameenmv/HazeClue_AI)
 
-## The RARD–MVES v2.2 Engine
-This engine is a **Hybrid Riemannian–Statistical EEG Inference System with Empirically Calibrated Mode Switching**. Because consumer EEG devices (like EMOTIV or dry-electrode headsets) suffer from frequent signal degradation, this AI does not rely on a single static model. Instead, it dynamically switches inference modes based on real-time Signal Quality Index (SQI).
+The HazeClue AI Engine is a **Hybrid Riemannian-Statistical EEG Inference System with Empirically Calibrated Mode Switching** (RARD–MVES v2.2). It is purpose-built for consumer-grade EEG devices (EMOTIV, Muse S, NeuroSky MindWave) that suffer from frequent electrode contact loss, motion artifacts, and signal degradation.
+
+Instead of relying on a single static model that fails silently under noisy conditions, RARD–MVES **dynamically switches inference modes** based on real-time Signal Quality Index (SQI).
+
+## System Overview
 
 ```mermaid
 graph TD
-    RawEEG[Raw EEG Window 512 samples] --> Filter[Bandpass Filter 1-40 Hz]
-    Filter --> SQI[Compute Channel SQI]
-    SQI --> Router{Mode Router}
-    
-    Router -->|SQI > 0.65 & Kappa < 50| RARD[RARD Mode<br/>Riemannian Geometry]
-    Router -->|0.35 < SQI <= 0.65| MVES[MVES Mode<br/>Statistical Features]
-    Router -->|SQI <= 0.35| SAFE[SAFE Mode<br/>Reject Window]
-    
-    RARD --> Extract1[Extract 105 Spatial Features]
-    MVES --> Extract2[Extract 203 Statistical Features]
-    
-    Extract1 --> Clf1[LDA Classifier]
-    Extract2 --> Clf2[Logistic Regression]
-    
-    Clf1 --> Smooth[Temporal EMA Smoothing]
-    Clf2 --> Smooth
-    SAFE --> Smooth
-    
-    Smooth --> Output[Final Focus Score]
+    Raw["Raw EEG Window\n512 samples @ 128Hz\n4-second window"]
+    Filter["Bandpass Filter\n1–40 Hz\n4th order Butterworth"]
+    SQI["Compute Channel SQI\nPer-channel signal quality score\n0.0 – 1.0"]
+    Router{"Mode Router\nSQI threshold decision"}
+
+    RARD["RARD Mode\n🟢 High Quality\nRiemannian Geometry\nSQI > 0.65 & Kappa < 50"]
+    MVES["MVES Mode\n🟡 Medium Quality\nStatistical Features\n0.35 < SQI ≤ 0.65"]
+    SAFE["SAFE Mode\n🔴 Low Quality\nWindow Rejected\nSQI ≤ 0.35"]
+
+    Extract1["105 Spatial Features\nTangent space projection\nfrom SPD manifold"]
+    Extract2["203 Statistical Features\nBandpowers + Hjorth\n+ Spectral tilt"]
+
+    LDA["LDA Classifier\nsklearn LinearDiscriminantAnalysis"]
+    LR["Logistic Regression\nsklearn LogisticRegression"]
+
+    EMA["Temporal EMA Smoothing\nγ = 0.7\nprevents score jitter"]
+    Output["Final Focus Score\n0.0 – 100.0"]
+
+    Raw --> Filter --> SQI --> Router
+    Router --> RARD --> Extract1 --> LDA --> EMA
+    Router --> MVES --> Extract2 --> LR --> EMA
+    Router --> SAFE --> EMA
+    EMA --> Output
 ```
 
-## Inference Pipeline Implementation (`inference/engine.py`)
+## Inference Modes
 
-The `HazeClueInferenceEngine` manages the entire lifecycle of a prediction window (4 seconds, 50% overlap).
+| Mode | Trigger Condition | Feature Count | Classifier | Use Case |
+|------|------------------|---------------|-----------|----------|
+| **RARD** | SQI > 0.65 AND Kappa < 50 | 105 spatial | LDA | Clean signal, high accuracy |
+| **MVES** | 0.35 < SQI ≤ 0.65 | 203 statistical | Logistic Regression | Degraded signal, noise-robust |
+| **SAFE** | SQI ≤ 0.35 | — | — | Window rejected; returns last prediction |
 
-### 1. Calibration Phase
-Before active inference, the system records 60 seconds of resting state EEG to compute the **Fréchet Mean** (geometric mean on the SPD manifold). This establishes a localized baseline `P_ref` for the specific user's brain topology.
+## Processing Pipeline
 
-### 2. Window Acceptance Policy
-Windows are aggressively validated:
-- `MIN_GLOBAL_SQI = 0.2`
-- If the mean SQI falls below this, the window is rejected (SAFE mode) and returns the last smoothed prediction to avoid sudden UI jumps.
+### Phase 1: Calibration (60 seconds)
 
-### 3. Covariance Stabilization
-To prevent mathematical collapse when channels fail:
-1. `P_weighted = Σ^½ P Σ^½` (Weighting by SQI)
-2. `P_reg = (1-λ)P + λI` (Ledoit-Wolf shrinkage)
-3. Eigenvalue grounding at `ε = 10⁻⁶` to force Symmetric Positive Definite (SPD) properties.
+Before active inference, the system records **60 seconds of resting-state EEG** to establish a personalized baseline:
 
-### 4. Feature Extraction & Classification
-- **RARD (Riemannian Geometry):** Projects the covariance matrix onto the tangent space at the baseline reference `P_ref`. Generates 105 spatial connectivity features. High accuracy, low noise tolerance.
-- **MVES:** Calculates Bandpowers (Delta, Theta, Alpha, Beta), Hjorth parameters (Activity, Mobility, Complexity), and Spectral tilts. Generates 203 features. Highly robust to noise.
+1. Computes the **Fréchet Mean** (geometric mean on the SPD manifold) from all resting-state covariance matrices
+2. This establishes `P_ref` — the individual's brain topology baseline
+3. All subsequent inference uses this reference for Riemannian feature extraction
 
-### 5. Temporal Smoothing (EMA)
-To prevent the focus score from jittering, the engine applies an Exponential Moving Average (EMA) with `γ = 0.7`:
-`smoothed_prediction = (0.7 × raw_score) + (0.3 × previous_smoothed)`
+### Phase 2: Real-Time Inference (per window)
 
-## Edge-Cloud Deployment
-The trained models (`sklearn` LDA/Logistic Regression) are exported via `onnx` and `skl2onnx` (`export_onnx.py`). This allows the Flutter mobile application to execute the inference locally using `onnxruntime_flutter` with a latency of `< 35ms`, completely offline.
+**Window parameters:** 4 seconds, 50% overlap (2-second step)
+
+**Step 1: Signal Quality Assessment**
+
+Each incoming 4-second window is scored on signal quality before processing:
+
+```python
+# From preprocessing/sqi.py
+MIN_GLOBAL_SQI = 0.2
+
+if mean_sqi < MIN_GLOBAL_SQI:
+    # SAFE mode: return last smoothed prediction
+    return self._last_smoothed_score
+```
+
+**Step 2: Covariance Stabilization**
+
+To prevent mathematical collapse when channels degrade:
+
+```python
+# 1. SQI-weighted covariance
+P_weighted = Σ^½ P Σ^½
+
+# 2. Ledoit-Wolf shrinkage (regularization)
+P_reg = (1 - λ) * P + λ * I
+
+# 3. Eigenvalue grounding (force SPD)
+eigenvalues = max(eigenvalues, ε=1e-6)
+```
+
+**Step 3: Feature Extraction**
+
+**RARD — Riemannian Geometry (105 features):**
+```python
+# Project covariance onto tangent space at P_ref
+S = logm(P_ref^(-½) @ P_reg @ P_ref^(-½))
+features = upper_triangle(S)  # 105 connectivity features
+```
+
+**MVES — Statistical Features (203 features):**
+```python
+features = [
+    *bandpowers(delta, theta, alpha, beta, gamma),  # 5 features
+    *hjorth_params(activity, mobility, complexity),   # 3 per channel
+    *spectral_tilt(slope, intercept),                # 2 per channel
+    # ... totaling 203 features
+]
+```
+
+**Step 4: Temporal Smoothing**
+
+```python
+# Exponential Moving Average (EMA) with γ = 0.7
+smoothed = 0.7 * raw_score + 0.3 * previous_smoothed
+```
+
+This prevents the focus score from jittering on the UI.
+
+## Model Training
+
+| Component | Algorithm | Library |
+|-----------|----------|---------|
+| **RARD Classifier** | Linear Discriminant Analysis (LDA) | `sklearn` |
+| **MVES Classifier** | Logistic Regression (L2, C=1.0) | `sklearn` |
+| **Covariance Estimation** | Ledoit-Wolf Shrinkage | `sklearn.covariance` |
+| **Riemannian Geometry** | Tangent Space Projection | `pyriemann` |
+
+### Training Data
+
+Training uses public EEG datasets with binary attention/non-attention labels:
+- Subjects calibrate individually (60s resting baseline)
+- Cross-validation with subject-independent hold-out sets
+- Class imbalance handled via `class_weight='balanced'`
+
+## ONNX Export for On-Device Inference
+
+Trained models are exported as ONNX for execution in the Flutter mobile app:
+
+```python
+# From export/export_onnx.py
+from skl2onnx import convert_sklearn
+from skl2onnx.common.data_types import FloatTensorType
+
+# Export RARD model (105 input features)
+initial_type = [('input', FloatTensorType([None, 105]))]
+onnx_model = convert_sklearn(rard_pipeline, initial_types=initial_type)
+with open('trained_models/hazeclue_rard.onnx', 'wb') as f:
+    f.write(onnx_model.SerializeToString())
+
+# Export MVES model (203 input features)
+initial_type = [('input', FloatTensorType([None, 203]))]
+onnx_model = convert_sklearn(mves_pipeline, initial_types=initial_type)
+with open('trained_models/hazeclue_mves.onnx', 'wb') as f:
+    f.write(onnx_model.SerializeToString())
+```
+
+**On-Device Performance:**
+| Metric | Value |
+|--------|-------|
+| Inference latency | **< 35ms** on modern devices |
+| Model size (RARD) | ~2.1 MB |
+| Model size (MVES) | ~4.7 MB |
+| Offline capable | ✅ Yes — no network required |
+
+## Repository Structure
+
+```
+hazeclue-ai/
+├── preprocessing/          # EEG preprocessing (filtering, SQI, windowing)
+├── features/               # Feature extractors (Riemannian, statistical)
+├── training/               # Model training pipelines
+├── inference/
+│   └── engine.py           # HazeClueInferenceEngine (main runtime)
+├── export/
+│   └── export_onnx.py      # ONNX model export
+├── api/                    # Flask/FastAPI inference server
+├── models/                 # Model definitions
+├── trained_models/         # Saved .onnx + .pkl model files
+├── notebooks/              # Research and analysis Jupyter notebooks
+├── tests/                  # Unit + integration tests
+├── requirements.txt
+└── main.py
+```
+
+## Local Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/ameenmv/HazeClue_AI.git
+cd HazeClue_AI
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+venv\Scripts\activate     # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the inference server
+python main.py
+```
+
+**Key dependencies:**
+```
+numpy
+scipy
+scikit-learn
+pyriemann
+onnxruntime
+skl2onnx
+mne
+```
