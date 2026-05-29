@@ -1,7 +1,23 @@
 # Mobile Backend — ASP.NET Core
 
 > **Repository:** [`HazeClue/Haze_clue_backend_mobile`](https://github.com/HazeClue/Haze_clue_backend_mobile)  
-> **Postman Collection:** [HazeClue_Mobile_Postman_Collection.json](https://github.com/ameenmv/Haze_clue_backend_mobile/blob/main/HazeClue_Mobile_Postman_Collection.json)
+> **Postman Collection:** [HazeClue_Mobile_Postman_Collection.json](https://github.com/ameenmv/Haze_clue_backend_mobile/blob/main/HazeClue_Mobile_Postman_Collection.json)  
+> **Base URL:** `http://localhost:5220/api/v1` (dev) · Production configured via `--dart-define`
+
+## Module Overview
+
+| Module | Base Path | Auth | Description |
+|--------|-----------|------|-------------|
+| Account | `/account` | 🌐 Public + 🔒 | Register, login, OTP, password reset, sessions |
+| Users | `/users` | 🔒 | Profile, settings, notification preferences |
+| Sessions | `/sessions` | 🔒 | Focus sessions, insights aggregation |
+| Devices | `/devices` | 🔒 | BCI/EEG device management |
+| Smartwatch | `/smartwatch` | 🔒 | Wearable health data sync |
+| Insights | `/insights` | 🔒 | AI-generated daily health tips |
+| Assessments | `/assessments` | 🔒 | Health survey + tDCS consent |
+| Notifications | `/notifications` | 🔒 | In-app notification inbox |
+| Dashboard | `/dashboard` | 🔒 | Aggregated home screen stats |
+| Support | `/support` | 🔒 | Contact / ticket submission |
 
 The Mobile Backend is the primary data persistence and business logic layer for the **Flutter mobile application**. Built on **ASP.NET Core Clean Architecture**, it handles cognitive session recording, hardware data ingestion, and AI-driven user insights.
 
