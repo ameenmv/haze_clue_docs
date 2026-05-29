@@ -8,6 +8,28 @@ The `HazeClue_backend_mobile` repository contains the robust API that serves the
 - **Authentication:** JWT (JSON Web Tokens)
 - **Architecture Pattern:** N-Tier / Clean Architecture principles (Core, Infrastructure, UI/API layers).
 
+## Core API Controllers
+
+The API exposes several endpoints under the `/api/v1` route, heavily secured by `[Authorize]` attributes and JWT claims.
+
+### 1. SessionsController (`v1/SessionsController.cs`)
+Handles all focus session logic and analytics. 
+- **`GET /Sessions`**: Retrieves all sessions for the authenticated user, ordered descending by `CreatedAt`.
+- **`POST /Sessions`**: Creates a new session (`FocusSession` entity) linked to a `DeviceId`, defaulting to `"active"` status.
+- **`POST /Sessions/{id}/complete`**: Marks a session as `"completed"`. It saves `AverageConcentration` and `ActualDurationSeconds`. **Crucially**, it also triggers an automatic `AppNotification` creation (e.g., "Session Completed! 🎉 Great job...").
+- **`POST /Sessions/{id}/score`**: Submits a `PuzzleScoreDto` creating a `PuzzleResult` entity tied to the session.
+- **`GET /Sessions/insights`**: Contains massive aggregation logic. It calculates:
+  - `totalFocusSeconds` and `averageMinutesPerDay`.
+  - `weeklyData` array by summing `ActualDurationSeconds` for the past 7 days individually.
+  - Computes `improvementPercentage` by comparing the current 7 days vs the previous 7 days (Days 7-13).
+  - `monthlyData` array by aggregating the last 6 months dynamically.
+
+### 2. SmartwatchController
+Ingests health metrics from the mobile device (Sleep, HRV, Stress).
+
+### 3. InsightsController & AssessmentsController
+Responsible for generating automated health tips and retrieving personalized assessments based on the latest uploaded physiological data.
+
 ## Core Entities
 
 ```mermaid
@@ -16,33 +38,29 @@ erDiagram
     USER ||--o{ FOCUS_SESSION : completes
     USER ||--o{ DEVICE : owns
     USER ||--o{ USER_INSIGHT : receives
+    FOCUS_SESSION ||--o| PUZZLE_RESULT : generates
 
-    USER {
-        string Id
-        string FullName
-        string Email
-    }
-    SMARTWATCH_DATA {
-        guid Id
-        int SleepScore
-        double HRV
-        string StressLevel
-    }
     FOCUS_SESSION {
-        guid Id
+        string Id
         string Title
         int DurationMinutes
-        int Score
-    }
-    USER_INSIGHT {
-        guid Id
-        string Type
-        string Message
+        int ActualDurationSeconds
+        string Status
+        int AverageConcentration
         datetime CreatedAt
+        datetime CompletedAt
+    }
+    
+    PUZZLE_RESULT {
+        string SessionId
+        int Score
+        int CompletionTimeSeconds
     }
 ```
 
-## Key Services
-1. **InsightGeneratorService:** A rule-based engine that processes recent `SmartwatchData` and user assessments to generate actionable `UserInsight` records (e.g., detecting high stress via HRV).
-2. **AuthService:** Handles password hashing, JWT generation, and user registration pipelines.
-3. **SmartwatchController:** Ingests health metrics from the mobile device.
+## Security & State Management
+The backend relies entirely on ASP.NET Identity and Claims. Every controller extracts the user context securely using:
+```csharp
+var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+```
+This ensures zero cross-tenant data leakage.

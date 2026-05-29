@@ -1,42 +1,55 @@
 # Mobile Application (Flutter)
 
-The HazeClue mobile application serves as the primary gateway for users to interact with the platform. It provides cognitive training, device management, and detailed insights.
+The `HazeClue_flutter` repository contains the core user-facing mobile application. It is built using Flutter to provide a deeply integrated, hardware-aware cross-platform experience.
 
-## Technology Stack
-- **Framework:** Flutter (Dart)
-- **State Management:** Provider / Riverpod (Standardized based on implementation)
-- **UI Architecture:** Glassmorphism design system using custom `GlassCard`, `GlassButton`, and `GlassTextField` widgets.
+## UI Architecture & Screens
 
-## Key Modules
+The app leverages a `NavigationShell` pattern to manage primary tabs and complex routing logic.
 
-### 1. Authentication
-Handles user registration, login, and secure token storage via `ApiService`. Includes robust form validation.
+### 1. Training & Stimulation (`training_screen.dart`, `tdcs_session_screen.dart`)
+This is the core functional area of the app. It provides access to:
+- **EEG Real-Time Monitoring:** Through `ApiService.getSessions()`.
+- **tDCS Simulator:** A fully animated `TdcsSessionScreen` that visualizes trans-cranial electrical stimulation pulses based on dynamic intensity sliders. It manages strict live countdown timers and logs "Focus Sessions" natively.
+- **Cognitive Training Games:** Includes a `MemoryTrainingScreen` and a `ConcentrationPuzzleScreen`. At the end of a puzzle, the app triggers a `POST` to `api/v1/sessions/{id}/score` to record cognitive aptitude alongside EEG data.
 
-### 2. Device Management
-The `MyDevicesScreen` allows users to scan for and connect Bluetooth devices:
-- **EEG Headsets:** (e.g., Muse, NeuroSky)
-- **tDCS Devices:** (e.g., Halo Sport)
-- **Smartwatches:** Extracts HRV, Sleep, and Stress data via Apple Health / Google Fit APIs.
+### 2. Analytics & Insights (`insights_screen.dart`)
+The Insights module retrieves aggregated behavioral data. 
+- **Time Analytics:** Pulls `totalFocusSeconds`, `averageMinutesPerDay`, and arrays for `weeklyData` and `monthlyData`.
+- **Performance Ratios:** Calculates user improvement dynamically (comparing previous week against current week performance).
+- **Health Data Fetching:** Integrates a parallel request to `ApiService.getUserInsights()` to present AI-driven personalized health recommendations.
 
-### 3. Cognitive Training
-Provides mini-games such as Concentration Puzzles and Memory Training. 
-Integrates with the **tDCS Simulator**, which visually simulates brain stimulation sessions.
+### 3. Hardware Management (`my_devices_screen.dart`)
+Manages BLE (Bluetooth Low Energy) pairing and hardware state.
+- Supports scanning for multiple mock/real devices including `Muse S (Gen 2)`, `NeuroSky MindWave`, and `Halo Sport (tDCS)`.
+- Enforces strict validations: Before starting any tDCS session, the app hard-redirects users to this screen if no compatible device is registered in the backend.
 
-### 4. Insights & Analytics
-Fetches daily health tips and weekly progress summaries based on both app usage and smartwatch data.
-
-## API Integration Flow
+## State Management and API Integration
+The app relies on `api_service.dart` to serve as a central HTTP client abstraction. 
 
 ```mermaid
 sequenceDiagram
     participant User
-    participant FlutterApp
-    participant API as Mobile Backend (.NET)
+    participant TrainingScreen
+    participant ApiService
+    participant Backend
+
+    User->>TrainingScreen: Tap "Start Session"
+    TrainingScreen->>ApiService: Check connected devices
+    ApiService->>Backend: GET /api/v1/devices
+    Backend-->>ApiService: Returns Device List
     
-    User->>FlutterApp: Opens App
-    FlutterApp->>API: Validates Auth Token
-    API-->>FlutterApp: 200 OK
-    FlutterApp->>API: Fetch Device Settings & Insights
-    API-->>FlutterApp: JSON Data
-    FlutterApp-->>User: Renders Home Screen
+    alt No Device Connected
+        ApiService-->>TrainingScreen: Empty
+        TrainingScreen-->>User: Redirect to My Devices
+    else Device Connected
+        TrainingScreen->>ApiService: POST /api/v1/sessions
+        Backend-->>ApiService: Session Created (Status: active)
+        TrainingScreen-->>User: Open Session UI
+    end
 ```
+
+## Security & Privacy (`account_security_screen.dart`)
+The app integrates multiple privacy-first features:
+- In-app password resets.
+- Detailed `tdcs_consent_screen.dart` ensuring users legally consent before applying direct electrical current simulations.
+- Strict token handling (destroying tokens on logout, refreshing on boot).
