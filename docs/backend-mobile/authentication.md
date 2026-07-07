@@ -100,7 +100,7 @@ Generates a 6-digit OTP with a **15-minute** expiry.
 ```
 
 ::: tip Demo Behavior
-OTP is printed to the server console (`Console.WriteLine`) for demo purposes. In production, this should integrate with an email provider.
+OTP is printed to the server console (`Console.WriteLine`) for demo purposes. For testing convenience, a static OTP (e.g., `123456`) may also be enabled in development. Additionally, the OTP is intentionally not cleared immediately after verification to facilitate seamless multi-step testing during the demo phase. In production, this should integrate with an email provider and strictly clear the OTP post-verification.
 :::
 
 ---

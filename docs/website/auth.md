@@ -150,3 +150,10 @@ interface User {
   email: string
 }
 ```
+
+## Auth UI & Layout
+
+The authentication pages use a dedicated `auth` layout (or `welcome` layout) that provides a consistent, distraction-free environment for sign-in and registration. 
+
+- **Theming:** Auth buttons and inputs are styled using the primary application theme colors to ensure a cohesive, modern look.
+- **i18n Content:** The welcome layout content (such as taglines and feature highlights displayed alongside the login forms) is fully localized in the `i18n` dictionaries, adapting automatically to Arabic (RTL) and English (LTR).

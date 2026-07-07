@@ -143,11 +143,6 @@ Broadcast an alert message to all connected clients in the session's Pusher chan
 { "message": "Please focus — attention levels dropping!" }
 ```
 
----
-
-### `POST /api/sessions/:id/tick`
-
-**Serverless-compatible simulation tick.** On Vercel (serverless), long-running timers can't persist between requests. The frontend polls this endpoint to drive the simulation engine manually, allowing attention score simulation to work correctly in a stateless environment.
 
 ---
 

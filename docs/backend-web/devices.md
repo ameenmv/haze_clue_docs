@@ -68,6 +68,12 @@ A `(user, serialNumber)` unique index prevents the same device from being regist
 
 ---
 
+### `GET /api/devices/scan`
+
+Scans the local network for available, advertising EEG/BCI devices. Returns an array of discovered device configurations and connection statuses. Useful for the frontend "Add Device" flow.
+
+---
+
 ### `GET /api/devices/:id`
 
 Get details for a specific device (must belong to the authenticated instructor).

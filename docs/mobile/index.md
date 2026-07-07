@@ -33,7 +33,7 @@ graph TD
 
     subgraph Training_Screens["Training Module"]
         TrainingScreen["Training Screen<br/>training_screen.dart"]
-        TdcsSession["tDCS Session<br/>tdcs_session_screen.dart"]
+        SimulationSession["Simulation Session<br/>simulation_session_screen.dart"]
         Memory["Memory Training<br/>memory_training_screen.dart"]
         Concentration["Concentration Puzzle<br/>concentration_puzzle_screen.dart"]
         EEGMonitor["EEG Real-Time Monitor"]
@@ -47,7 +47,7 @@ graph TD
     Training --> TrainingScreen
     TrainingScreen --> DeviceCheck
     DeviceCheck -- No --> Redirect
-    DeviceCheck -- Yes --> TdcsSession & Memory & Concentration & EEGMonitor
+    DeviceCheck -- Yes --> SimulationSession & Memory & Concentration & EEGMonitor
 ```
 
 ## Core Screens
@@ -64,11 +64,11 @@ Future<List<Device>> getDevices() async {
 }
 ```
 
-**tDCS Session (`tdcs_session_screen.dart`)**
+**Simulation Session (`simulation_session_screen.dart`)**
 - Fully animated visualization of transcranial electrical stimulation pulses
 - Dynamic intensity sliders (current µA, frequency Hz)
 - Strict live countdown timer with session logging
-- Consent gate via `tdcs_consent_screen.dart` before first use
+- Consent gate via `simulation_consent_screen.dart` before first use
 
 **Cognitive Training Games**
 - `MemoryTrainingScreen` — pattern recall with progressive difficulty
@@ -80,6 +80,10 @@ Future<List<Device>> getDevices() async {
 await apiService.submitPuzzleScore(sessionId, score, completionTimeSeconds);
 // POST /api/v1/sessions/{id}/score
 ```
+
+### Splash Screen & Branding
+
+The app features updated splash screens and platform-specific launch images (iOS/Android) reflecting the latest HazeClue branding, ensuring a premium first-impression during the loading sequence.
 
 ### 2. Analytics & Insights (`insights_screen.dart`)
 
@@ -107,11 +111,11 @@ BLE device scanning and management:
 **Supported devices:**
 - `Muse S (Gen 2)` — EEG headset
 - `NeuroSky MindWave` — EEG headset
-- `Halo Sport (tDCS)` — neurostimulation device
+- `Halo Sport (Simulation)` — neurostimulation device
 - Generic BLE EEG/BCI devices
 
 **Validation gate:**
-> Before any tDCS or EEG session starts, the app hard-redirects users to this screen if no compatible device is registered in the backend. This prevents "ghost sessions" with no hardware attached.
+> Before any Simulation or EEG session starts, the app hard-redirects users to this screen if no compatible device is registered in the backend. This prevents "ghost sessions" with no hardware attached.
 
 ## API Integration
 
@@ -167,7 +171,7 @@ final focusScore = results[0].value[0][0]; // 0.0–1.0
 - Biometric lock support
 - Session token destruction on logout
 
-**`tdcs_consent_screen.dart`**
+**`simulation_consent_screen.dart`**
 - Legal consent capture before any neurostimulation session
 - User must explicitly agree to safety terms; consent is stored server-side
 

@@ -30,6 +30,9 @@ The Mobile Backend is the primary data persistence and business logic layer for 
 | **Database** | SQL Server / PostgreSQL |
 | **Authentication** | JWT Bearer Tokens (`System.IdentityModel.Tokens.Jwt`) |
 | **Architecture** | Clean Architecture (Core → Infrastructure → UI layers) |
+| **Validation** | FluentValidation |
+| **Caching** | IMemoryCache |
+| **Resilience** | Global Exception Handling, Rate Limiting |
 | **Testing** | xUnit (Controller Tests, Service Tests, Integration Tests) |
 | **Containerization** | Docker |
 
@@ -179,6 +182,10 @@ Ingests health metrics from wearables (Apple Watch, Google Wear OS):
   "stressLevel": 28.1
 }
 ```
+
+### DashboardController
+
+Serves aggregated statistics for the app's home screen. To optimize performance and reduce database load, responses are cached using `IMemoryCache` for quick retrieval during frequent app launches.
 
 ### InsightsController & AssessmentsController
 

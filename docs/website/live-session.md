@@ -17,7 +17,7 @@ graph LR
 
     subgraph Backend["NestJS Backend (Vercel)"]
         SessionAPI["/api/sessions/:id"]
-        Tick["/api/sessions/:id/tick\n(simulation driver)"]
+        SimulationLoop["Server-side Node interval\n(simulation driver)"]
     end
 
     subgraph Pusher["Pusher (eu cluster)"]
@@ -29,8 +29,7 @@ graph LR
     Channel -->|"alert event"| LiveSession
     Channel -->|"session:end event"| LiveSession
 
-    LiveSession -->|"POST every 2s"| Tick
-    Tick -->|"trigger()"| Channel
+    SimulationLoop -->|"trigger()"| Channel
 
     Controls -->|"POST /pause"| SessionAPI
     Controls -->|"POST /alert"| SessionAPI
@@ -104,20 +103,31 @@ function updateChart(attention: number, timestamp: string) {
 - Y-axis: 0–100 (attention score)
 - Smooth curves: `tension: 0.4`
 
-## Simulation Tick Driver
+## State Management
 
-On Vercel (serverless), the backend can't run background timers. The frontend drives the simulation:
+Monitoring state, including connected devices, live session parameters, and current UI status, is shared across deeply nested components using Vue's `provide/inject` API. This avoids prop-drilling from the root layout to individual charts or controls:
 
 ```typescript
-// Drive simulation every 2 seconds
-const tickInterval = setInterval(async () => {
-  await $customFetch(`/sessions/${sessionId}/tick`, { method: 'POST' })
-}, 2000)
+// Parent component
+provide('monitoringState', readonly(state))
+provide('updateMonitoringState', updateState)
 
-onUnmounted(() => clearInterval(tickInterval))
+// Child component
+const monitoringState = inject('monitoringState')
 ```
 
-Each tick triggers the NestJS backend to generate a simulated EEG data point and broadcast it via Pusher.
+## Device Scanning & Connection
+
+Before a session fully activates, instructors can scan the local network for advertising devices to bind to specific students. 
+
+```typescript
+async function scanDevices() {
+  const result = await $customFetch('/devices/scan')
+  availableDevices.value = result.data
+}
+```
+
+The device list UI is synchronized dynamically via the shared state when a new device pairs successfully, enabling seamless multi-device connection flows before live telemetry starts.
 
 ## Instructor Controls
 

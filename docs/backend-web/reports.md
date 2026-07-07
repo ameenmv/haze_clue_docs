@@ -157,3 +157,26 @@ Manage the authenticated instructor's profile.
 | `PATCH` | `/users/me` | Update name, phone, avatar URL |
 | `PATCH` | `/users/me/password` | Change password (requires current password) |
 | `DELETE` | `/users/me` | Soft-delete account (`deletedAt` timestamp) |
+
+---
+
+### Support API
+
+Submit contact and support tickets from the frontend.
+
+**Base path:** `/api/support`
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/support/contact` | Creates a new support ticket and sends an email notification to the support team via Nodemailer. |
+
+**Request body (`ContactDto`):**
+```json
+{
+  "fullName": "Instructor Name",
+  "email": "instructor@example.com",
+  "message": "I need help with my headset.",
+  "agree": true
+}
+```
+*Note: `agree` is an optional boolean field to indicate agreement with support terms or privacy policy.*

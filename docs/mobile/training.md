@@ -1,8 +1,8 @@
-# Training & tDCS — Flutter
+# Training & Simulation — Flutter
 
 **File:** `lib/screens/training_screen.dart`
 
-The Training screen is the cognitive enhancement hub. It groups all active modalities — cognitive games, binaural audio, and tDCS neurostimulation — with a hardware gate that validates device connectivity before any session.
+The Training screen is the cognitive enhancement hub. It groups all active modalities — cognitive games, binaural audio, and Simulation neurostimulation — with a hardware gate that validates device connectivity before any session.
 
 ## Screen Structure
 
@@ -14,9 +14,9 @@ TrainingScreen
 ├── Binaural Beats Presets
 │   ├── Alpha Wave Relaxation (30 min) — inline player
 │   └── Theta Wave Meditation (45 min) — inline player
-└── tDCS Settings
+└── Simulation Settings
     ├── Intensity Slider (0–100%)
-    └── "Start tDCS Session" button → hardware gate → TdcsSessionScreen
+    └── "Start Simulation Session" button → hardware gate → SimulationSessionScreen
 ```
 
 ## Device Settings Sync
@@ -47,20 +47,20 @@ Future<void> _saveIntensity(double value) async {
 - `GET /users/me/device-settings` — load intensity
 - `PUT /users/me/device-settings` — save intensity
 
-## tDCS Hardware Gate
+## Simulation Hardware Gate
 
-Before starting a tDCS session, the app **validates that a tDCS-compatible device is registered**:
+Before starting a Simulation session, the app **validates that a Simulation-compatible device is registered**:
 
 ```dart
-Future<void> _startTdcsSession() async {
+Future<void> _startSimulationSession() async {
   final devices = await ApiService.getDevices();
-  final hasTdcs = devices.any((d) =>
-    d['name'].toString().toLowerCase().contains('tdcs') ||
+  final hasSimulation = devices.any((d) =>
+    d['name'].toString().toLowerCase().contains('simulation') ||
     d['name'].toString().toLowerCase().contains('halo')
   );
   
-  if (!hasTdcs) {
-    showGlassToast(context, "Please connect a tDCS device first.");
+  if (!hasSimulation) {
+    showGlassToast(context, "Please connect a Simulation device first.");
     Navigator.push(context, GlassPageRoute(page: const MyDevicesScreen()));
     return;
   }
@@ -94,13 +94,13 @@ Row(
 )
 ```
 
-## tDCS Session Screen (`tdcs_session_screen.dart`)
+## Simulation Session Screen (`simulation_session_screen.dart`)
 
 The live stimulation session UI, launched with:
 
 ```dart
 Navigator.push(context, GlassPageRoute(
-  page: TdcsSessionScreen(
+  page: SimulationSessionScreen(
     initialIntensity: _intensityLevel,
     durationMinutes: selectedDuration,
   ),

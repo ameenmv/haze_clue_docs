@@ -16,6 +16,17 @@ The Insights module generates **rule-based, personalized health tips** by analyz
 | `Alert` | Urgent intervention needed (e.g., high stress detected) |
 | `Achievement` | Positive reinforcement (e.g., great sleep streak) |
 
+### UserInsight Entity
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `Id` | `string (GUID)` | Auto-generated |
+| `UserId` | `string` | FK → AppUser |
+| `Type` | `string` | e.g. "Alert", "DailyTip" |
+| `Title` | `string` | Insight title |
+| `Message` | `string` | Insight body / recommendation |
+| `CreatedAt` | `DateTime` | Auto-generated on generation |
+
 ### `GET /api/v1/insights` 🔒
 
 Returns today's insights for the user. If none exist, **automatically generates new ones** before responding.

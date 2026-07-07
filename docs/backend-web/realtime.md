@@ -118,7 +118,7 @@ channel.bind('session:end', () => {
 
 ## Simulation Mode
 
-When `USE_SIMULATION=true` is set in environment variables, the backend auto-generates synthetic attention data for testing without real hardware. The frontend drives this via the `POST /api/sessions/:id/tick` endpoint, which triggers one simulation step and fires the Pusher event — keeping the serverless architecture fully functional in a demo environment.
+When `USE_SIMULATION=true` is set in environment variables, the backend auto-generates synthetic attention data for testing without real hardware. The simulation is now driven **server-side using Node intervals**. Upon session start, a live data generation loop runs in the background, continuously broadcasting telemetry events via Pusher — providing a fully functional demo environment without relying on frontend tick polling.
 
 ::: tip USE_SIMULATION
 Perfect for demos and the graduation presentation! Set this in your `.env` to show a live attention dashboard without needing physical EEG devices connected.

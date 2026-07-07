@@ -119,8 +119,10 @@ This prevents the focus score from jittering on the UI.
 |-----------|----------|---------|
 | **RARD Classifier** | Linear Discriminant Analysis (LDA) | `sklearn` |
 | **MVES Classifier** | Logistic Regression (L2, C=1.0) | `sklearn` |
+| **Deep Learning Models** | EEGNet & ShallowConvNet | `pytorch` / `braindecode` |
 | **Covariance Estimation** | Ledoit-Wolf Shrinkage | `sklearn.covariance` |
 | **Riemannian Geometry** | Tangent Space Projection | `pyriemann` |
+| **Spatial Filtering** | Filter Bank CSP (FBCSP) | `mne` / `scikit-learn` |
 
 ### Training Data
 
@@ -170,6 +172,7 @@ hazeclue-ai/
 │   └── engine.py           # HazeClueInferenceEngine (main runtime)
 ├── export/
 │   └── export_onnx.py      # ONNX model export
+├── islam/                  # Report generation and integration files
 ├── api/                    # Flask/FastAPI inference server
 ├── models/                 # Model definitions
 ├── trained_models/         # Saved .onnx + .pkl model files

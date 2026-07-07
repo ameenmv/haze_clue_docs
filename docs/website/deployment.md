@@ -147,6 +147,19 @@ The Netlify deploy uses the **Nuxt Nitro** SSR server running as Netlify Functio
 /* /.netlify/functions/server 200
 ```
 
+## Vercel Deployment
+
+Nuxt 4 also supports deployment on Vercel out of the box using Nitro's serverless functions.
+A `vercel.json` file is included to configure a fallback rewrite rule ensuring client-side SPA routing works seamlessly:
+
+```json
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
+
 ## PM2 Production Mode
 
 For self-hosted VPS deployment using PM2:
