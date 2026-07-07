@@ -7,6 +7,7 @@ export default withMermaid(
     titleTemplate: ":title — HazeClue Docs",
     description: "Official developer documentation for the HazeClue platform — EEG-driven cognitive enhancement through AI, BCI hardware, and real-time telemetry.",
     appearance: 'dark',
+    cleanUrls: true,
 
     head: [
       ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
